@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Documentos – Focus Talento Humano</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#0B0B0C">
+  <link rel="icon" type="image/png" sizes="192x192" href="https://evaluacion.focustechinc.net/icon-192.png">
+  <link rel="apple-touch-icon" href="https://evaluacion.focustechinc.net/apple-touch-icon.png">
+  <style>
+    html, body { margin: 0; height: 100%; background: #ECECEC; }
+    iframe { display: block; border: 0; width: 100%; height: 100vh; height: 100dvh; }
+  </style>
+</head>
+<body>
+  <iframe id="documento" title="Documento"></iframe>
+  <script>
+    // Web app de Apps Script (Reclutamiento IA / Documentos.gs)
+    var BASE = 'https://script.google.com/macros/s/AKfycbykt1M8mzRaOH5BDa5nhl1_6JB8Nwe-jEJ-1S8hSeB626WAkNYiyy1prr8p--UQhx6C2w/exec';
+    var p = new URLSearchParams(location.search);
+    var token = p.get('d') || '';
+    try {
+      if (token) sessionStorage.setItem('doc_token', token);
+      else token = sessionStorage.getItem('doc_token') || '';
+    } catch (e) {}
+    // Deja la barra de direcciones limpia: documentos.focustechinc.net
+    if (p.has('d')) history.replaceState(null, '', location.pathname);
+    document.getElementById('documento').src = BASE + '?doc=' + encodeURIComponent(token);
+
+    // Descarga del PDF fuera del marco de Google (lo envía Documento.html)
+    window.addEventListener('message', function (ev) {
+      var d = ev.data || {};
+      var host = '';
+      try { host = new URL(ev.origin).hostname; } catch (e) { return; }
+      if (!/\.googleusercontent\.com$/.test(host) || d.tipo !== 'pdf-descargar' || !d.b64) return;
+      var bin = atob(d.b64), bytes = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      var url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = d.nombre || 'documento.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+      if (ev.source) ev.source.postMessage({ tipo: 'pdf-ok' }, ev.origin);
+    });
+  </script>
+</body>
+</html>
